@@ -30,12 +30,24 @@
                 <p>Manage your PostgreSQL database connections</p>
             </div>
         </div>
-        <button class="btn btn-primary" id="btnAddConnection" onclick="openModal()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add Connection
-        </button>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="btnSetThreshold" onclick="openThresholdModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+                    <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+                    <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+                </svg>
+                Dead Tuple Threshold
+                <span class="threshold-badge" id="thresholdBadge">10,000</span>
+            </button>
+            <button class="btn btn-primary" id="btnAddConnection" onclick="openModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Connection
+            </button>
+        </div>
     </header>
 
     <!-- Connections Grid -->
@@ -129,10 +141,54 @@
     </div>
 </div>
 
+<!-- Threshold Settings Modal -->
+<div class="modal-overlay" id="thresholdModalOverlay">
+    <div class="modal threshold-modal">
+        <div class="modal-header">
+            <h2>Dead Tuple Threshold</h2>
+            <button class="modal-close" onclick="closeThresholdModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="threshold-description">Set the minimum threshold value for considering a vacuum on a table.</p>
+            <div class="form-group">
+                <label class="form-label" for="thresholdInput">Minimum Dead Tuples</label>
+                <input class="form-input" type="number" id="thresholdInput" min="0" step="1" placeholder="10000">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeThresholdModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveThreshold()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bloated Tables Modal -->
+<div class="modal-overlay" id="bloatModalOverlay">
+    <div class="modal bloat-modal">
+        <div class="modal-header">
+            <div>
+                <h2 id="bloatModalTitle">Bloated Tables</h2>
+                <p class="bloat-modal-subtitle" id="bloatModalSubtitle">Threshold: 10,000 dead tuples</p>
+            </div>
+            <button class="modal-close" onclick="closeBloatModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="bloatModalContent"></div>
+            <div class="modal-actions bloat-modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeBloatModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // ===== STATE =====
     let connections = JSON.parse('{{ connections_json|escapejs }}');
     let pendingDeleteId = null;
+    let deadTupleThreshold = parseInt(localStorage.getItem('deadTupleThreshold')) || 10000;
+
+    // Update threshold badge on load
+    document.getElementById('thresholdBadge').textContent = deadTupleThreshold.toLocaleString();
 
     // ===== CSRF =====
     function getCookie(name) {
@@ -206,13 +262,21 @@
                 </div>
                 <div class="card-footer">
                     <span class="card-date">Added ${escapeHtml(conn.created_at)}</span>
-                    <button class="btn btn-test-card" id="btnTestCard-${conn.id}" onclick="testSavedConnection(${conn.id})" title="Test connection">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                            <polyline points="22 4 12 14.01 9 11.01"/>
-                        </svg>
-                        Test
-                    </button>
+                    <div class="card-footer-actions">
+                        <button class="btn btn-bloat-card" id="btnBloatCard-${conn.id}" onclick="checkBloatness(${conn.id}, '${escapeHtml(conn.name)}')" title="Check bloatness">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
+                            </svg>
+                            Check Bloatness
+                        </button>
+                        <button class="btn btn-test-card" id="btnTestCard-${conn.id}" onclick="testSavedConnection(${conn.id})" title="Test connection">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            Test
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -423,11 +487,126 @@
         }
     }
 
+    // ===== THRESHOLD MODAL =====
+    function openThresholdModal() {
+        document.getElementById('thresholdInput').value = deadTupleThreshold;
+        document.getElementById('thresholdModalOverlay').classList.add('active');
+        document.getElementById('thresholdInput').focus();
+    }
+
+    function closeThresholdModal() {
+        document.getElementById('thresholdModalOverlay').classList.remove('active');
+    }
+
+    function saveThreshold() {
+        const input = document.getElementById('thresholdInput');
+        const value = parseInt(input.value);
+        if (isNaN(value) || value < 0) {
+            input.classList.add('input-error');
+            setTimeout(() => input.classList.remove('input-error'), 600);
+            return;
+        }
+        deadTupleThreshold = value;
+        localStorage.setItem('deadTupleThreshold', value);
+        document.getElementById('thresholdBadge').textContent = value.toLocaleString();
+        closeThresholdModal();
+        showToast('success', `Threshold updated to ${value.toLocaleString()} dead tuples.`);
+    }
+
+    // ===== CHECK BLOATNESS =====
+    async function checkBloatness(connectionId, connectionName) {
+        const btn = document.getElementById(`btnBloatCard-${connectionId}`);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Checking...';
+
+        try {
+            const res = await fetch(`/api/connections/${connectionId}/bloat/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ threshold: deadTupleThreshold }),
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                openBloatModal(result, connectionName);
+            } else {
+                showToast('error', result.message);
+            }
+        } catch (err) {
+            showToast('error', 'Network error. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
+                </svg>
+                Check Bloatness`;
+        }
+    }
+
+    // ===== BLOAT MODAL =====
+    function openBloatModal(data, connectionName) {
+        document.getElementById('bloatModalTitle').textContent = `Bloated Tables — ${connectionName}`;
+        document.getElementById('bloatModalSubtitle').textContent = `Threshold: ${data.threshold.toLocaleString()} dead tuples`;
+
+        const content = document.getElementById('bloatModalContent');
+
+        if (data.tables.length === 0) {
+            content.innerHTML = `
+                <div class="bloat-empty">
+                    <div class="bloat-empty-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <h3>All clean!</h3>
+                    <p>No tables exceed ${data.threshold.toLocaleString()} dead tuples.</p>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="bloat-table-header">
+                    <span class="bloat-col-check"></span>
+                    <span class="bloat-col-table">Table</span>
+                    <span class="bloat-col-tuples">Dead Tuples</span>
+                </div>
+                <div class="bloat-table-list">
+                    ${data.tables.map((t, i) => `
+                        <label class="bloat-table-row" for="bloat-check-${i}">
+                            <input type="checkbox" id="bloat-check-${i}" class="bloat-checkbox" value="${escapeHtml(t.schema)}.${escapeHtml(t.table)}">
+                            <span class="bloat-table-name">
+                                <span class="bloat-schema">${escapeHtml(t.schema)}</span>.<span class="bloat-relname">${escapeHtml(t.table)}</span>
+                            </span>
+                            <span class="bloat-dead-tup">${t.n_dead_tup.toLocaleString()}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="bloat-summary">
+                    ${data.tables.length} table${data.tables.length !== 1 ? 's' : ''} with dead tuples exceeding threshold
+                </div>
+            `;
+        }
+
+        document.getElementById('bloatModalOverlay').classList.add('active');
+    }
+
+    function closeBloatModal() {
+        document.getElementById('bloatModalOverlay').classList.remove('active');
+    }
+
     // ===== KEYBOARD SHORTCUTS =====
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (document.getElementById('confirmOverlay').classList.contains('active')) {
                 closeConfirm();
+            } else if (document.getElementById('bloatModalOverlay').classList.contains('active')) {
+                closeBloatModal();
+            } else if (document.getElementById('thresholdModalOverlay').classList.contains('active')) {
+                closeThresholdModal();
             } else if (document.getElementById('modalOverlay').classList.contains('active')) {
                 closeModal();
             }
@@ -441,6 +620,14 @@
 
     document.getElementById('confirmOverlay').addEventListener('click', (e) => {
         if (e.target === e.currentTarget) closeConfirm();
+    });
+
+    document.getElementById('thresholdModalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeThresholdModal();
+    });
+
+    document.getElementById('bloatModalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeBloatModal();
     });
 
     // ===== INIT =====
