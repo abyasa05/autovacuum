@@ -1,4 +1,41 @@
+import base64
 from django.db import models
+from django.conf import settings
+from cryptography.fernet import Fernet
+
+def get_fernet():
+    key = settings.SECRET_KEY.encode('utf-8')
+    # Fernet keys must be 32 url-safe base64-encoded bytes
+    key = base64.urlsafe_b64encode(key.ljust(32, b'0')[:32])
+    return Fernet(key)
+
+class EncryptedCharField(models.CharField):
+    """Custom CharField that transparently encrypts data in the DB."""
+    def from_db_value(self, value, expression, connection):
+        if not value:
+            return value
+        try:
+            return get_fernet().decrypt(value.encode('utf-8')).decode('utf-8')
+        except Exception:
+            return value
+
+    def to_python(self, value):
+        if not value:
+            return value
+        try:
+            return get_fernet().decrypt(value.encode('utf-8')).decode('utf-8')
+        except Exception:
+            return value
+
+    def get_prep_value(self, value):
+        value = super().get_prep_value(value)
+        if not value:
+            return value
+        try:
+            get_fernet().decrypt(value.encode('utf-8'))
+            return value # Already encrypted
+        except Exception:
+            return get_fernet().encrypt(value.encode('utf-8')).decode('utf-8')
 
 
 class DatabaseConnection(models.Model):
@@ -25,9 +62,10 @@ class DatabaseConnection(models.Model):
         max_length=255,
         help_text='Database username'
     )
-    password = models.CharField(
+    password = EncryptedCharField(
         max_length=255,
-        help_text='Database password'
+        blank=True,
+        help_text='Database password (stored encrypted)'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     last_vacuum = models.DateTimeField(
