@@ -7,6 +7,39 @@ from django.views.decorators.http import require_http_methods
 from .models import DatabaseConnection
 
 
+def _test_pg_connection(host, port, dbname, user, password):
+    """Utility function to test a PostgreSQL connection and return a JsonResponse."""
+    try:
+        conn = psycopg2.connect(
+            host=host,
+            port=port,
+            dbname=dbname,
+            user=user,
+            password=password,
+            connect_timeout=5,
+        )
+        # Fetch server version as proof of connection
+        cursor = conn.cursor()
+        cursor.execute('SELECT version();')
+        version = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        return JsonResponse({
+            'success': True,
+            'message': f'Connection successful! Server: {version}'
+        })
+    except psycopg2.OperationalError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Connection failed: {str(e).strip()}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Unexpected error: {str(e).strip()}'
+        })
+
+
 @ensure_csrf_cookie
 def dashboard_view(request):
     """Render the single-page dashboard with all saved connections."""
@@ -54,35 +87,7 @@ def test_connection(request):
     except (TypeError, ValueError):
         return JsonResponse({'success': False, 'message': 'Port must be a number.'}, status=400)
 
-    try:
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            dbname=dbname,
-            user=username,
-            password=password,
-            connect_timeout=5,
-        )
-        # Fetch server version as proof of connection
-        cursor = conn.cursor()
-        cursor.execute('SELECT version();')
-        version = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
-        return JsonResponse({
-            'success': True,
-            'message': f'Connection successful! Server: {version}'
-        })
-    except psycopg2.OperationalError as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Connection failed: {str(e).strip()}'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Unexpected error: {str(e).strip()}'
-        })
+    return _test_pg_connection(host, port, dbname, username, password)
 
 
 @require_http_methods(["POST"])
@@ -96,34 +101,13 @@ def test_saved_connection(request, connection_id):
             'message': 'Connection not found.'
         }, status=404)
 
-    try:
-        conn = psycopg2.connect(
-            host=db_conn.host,
-            port=db_conn.port,
-            dbname=db_conn.dbname,
-            user=db_conn.username,
-            password=db_conn.password,
-            connect_timeout=5,
-        )
-        cursor = conn.cursor()
-        cursor.execute('SELECT version();')
-        version = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
-        return JsonResponse({
-            'success': True,
-            'message': f'Connection successful! Server: {version}'
-        })
-    except psycopg2.OperationalError as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Connection failed: {str(e).strip()}'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Unexpected error: {str(e).strip()}'
-        })
+    return _test_pg_connection(
+        db_conn.host,
+        db_conn.port,
+        db_conn.dbname,
+        db_conn.username,
+        db_conn.password
+    )
 
 
 @require_http_methods(["POST"])
