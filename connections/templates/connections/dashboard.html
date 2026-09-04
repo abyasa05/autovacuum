@@ -47,8 +47,9 @@
                         <line x1="9" y1="8" x2="15" y2="8" />
                         <line x1="17" y1="16" x2="23" y2="16" />
                     </svg>
-                    Dead Tuple Threshold
+                    Vacuum Condition
                     <span class="threshold-badge" id="thresholdBadge">10,000</span>
+                    <span class="threshold-badge" id="minSizeBadge" style="display: none;"></span>
                 </button>
                 <button class="btn btn-primary" id="btnAddConnection" onclick="openModal()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -155,19 +156,26 @@
         </div>
     </div>
 
-    <!-- Threshold Settings Modal -->
+    <!-- Vacuum Condition Modal -->
     <div class="modal-overlay" id="thresholdModalOverlay">
         <div class="modal threshold-modal">
             <div class="modal-header">
-                <h2>Dead Tuple Threshold</h2>
+                <h2>Vacuum Condition</h2>
                 <button class="modal-close" onclick="closeThresholdModal()" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
-                <p class="threshold-description">Set the minimum threshold value for considering a vacuum on a table.
-                </p>
+                <p class="threshold-description">Configure conditions for flagging tables that need vacuuming.</p>
                 <div class="form-group">
                     <label class="form-label" for="thresholdInput">Minimum Dead Tuples</label>
                     <input class="form-input" type="number" id="thresholdInput" min="0" step="1" placeholder="10000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label form-label-checkbox">
+                        <input type="checkbox" id="minTableSizeEnabled">
+                        Minimum Table Size (KB)
+                    </label>
+                    <input class="form-input" type="number" id="minTableSizeInput" min="0" step="1"
+                        placeholder="e.g. 512" disabled>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeThresholdModal()">Cancel</button>
@@ -222,10 +230,13 @@
         let connections = JSON.parse('{{ connections_json|escapejs }}');
         let pendingDeleteId = null;
         let deadTupleThreshold = parseInt(localStorage.getItem('deadTupleThreshold')) || 10000;
+        let minTableSizeEnabled = localStorage.getItem('minTableSizeEnabled') === 'true';
+        let minTableSizeKB = localStorage.getItem('minTableSizeKB') ? parseInt(localStorage.getItem('minTableSizeKB')) : null;
         let currentBloatConnectionId = null;
 
         // Update threshold badge on load
         document.getElementById('thresholdBadge').textContent = deadTupleThreshold.toLocaleString();
+        updateMinSizeBadge();
 
         // ===== CSRF =====
         function getCookie(name) {
@@ -531,9 +542,19 @@
             }
         }
 
-        // ===== THRESHOLD MODAL =====
+        // ===== VACUUM CONDITION MODAL =====
         function openThresholdModal() {
             document.getElementById('thresholdInput').value = deadTupleThreshold;
+            const checkbox = document.getElementById('minTableSizeEnabled');
+            const sizeInput = document.getElementById('minTableSizeInput');
+            checkbox.checked = minTableSizeEnabled;
+            sizeInput.disabled = !minTableSizeEnabled;
+            sizeInput.value = minTableSizeKB !== null ? minTableSizeKB : '';
+            // Toggle input disabled state on checkbox change
+            checkbox.onchange = () => {
+                sizeInput.disabled = !checkbox.checked;
+                if (checkbox.checked) sizeInput.focus();
+            };
             document.getElementById('thresholdModalOverlay').classList.add('active');
             document.getElementById('thresholdInput').focus();
         }
@@ -550,11 +571,44 @@
                 setTimeout(() => input.classList.remove('input-error'), 600);
                 return;
             }
+
+            const checkbox = document.getElementById('minTableSizeEnabled');
+            const sizeInput = document.getElementById('minTableSizeInput');
+            const sizeEnabled = checkbox.checked;
+
+            if (sizeEnabled) {
+                const sizeValue = parseInt(sizeInput.value);
+                if (isNaN(sizeValue) || sizeValue < 0) {
+                    sizeInput.classList.add('input-error');
+                    setTimeout(() => sizeInput.classList.remove('input-error'), 600);
+                    return;
+                }
+                minTableSizeKB = sizeValue;
+                localStorage.setItem('minTableSizeKB', sizeValue);
+            } else {
+                minTableSizeKB = null;
+                localStorage.removeItem('minTableSizeKB');
+            }
+
+            minTableSizeEnabled = sizeEnabled;
+            localStorage.setItem('minTableSizeEnabled', sizeEnabled);
+
             deadTupleThreshold = value;
             localStorage.setItem('deadTupleThreshold', value);
             document.getElementById('thresholdBadge').textContent = value.toLocaleString();
+            updateMinSizeBadge();
             closeThresholdModal();
-            showToast('success', `Threshold updated to ${value.toLocaleString()} dead tuples.`);
+            showToast('success', 'Vacuum conditions updated.');
+        }
+
+        function updateMinSizeBadge() {
+            const badge = document.getElementById('minSizeBadge');
+            if (minTableSizeEnabled && minTableSizeKB !== null) {
+                badge.textContent = minTableSizeKB.toLocaleString() + ' KB';
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         // ===== CHECK BLOATNESS =====
@@ -570,7 +624,10 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken,
                     },
-                    body: JSON.stringify({ threshold: deadTupleThreshold }),
+                    body: JSON.stringify({
+                        threshold: deadTupleThreshold,
+                        min_table_size_kb: minTableSizeEnabled ? minTableSizeKB : null,
+                    }),
                 });
                 const result = await res.json();
 
@@ -595,7 +652,11 @@
         function openBloatModal(data, connectionName, connectionId) {
             currentBloatConnectionId = connectionId;
             document.getElementById('bloatModalTitle').textContent = `Bloated Tables — ${connectionName}`;
-            document.getElementById('bloatModalSubtitle').textContent = `Threshold: ${data.threshold.toLocaleString()} dead tuples`;
+            let subtitle = `Threshold: ≥ ${data.threshold.toLocaleString()} dead tuples`;
+            if (data.min_table_size_kb !== null && data.min_table_size_kb !== undefined) {
+                subtitle += ` • Min size: ≥ ${data.min_table_size_kb.toLocaleString()} KB`;
+            }
+            document.getElementById('bloatModalSubtitle').textContent = subtitle;
 
             // Reset to checklist view (hide success state)
             document.getElementById('bloatModalContent').style.display = '';
@@ -614,7 +675,6 @@
                         </svg>
                     </div>
                     <h3>All clean!</h3>
-                    <p>No tables exceed ${data.threshold.toLocaleString()} dead tuples.</p>
                 </div>
             `;
             } else {
@@ -623,6 +683,7 @@
                     <span class="bloat-col-check"></span>
                     <span class="bloat-col-table">Table</span>
                     <span class="bloat-col-tuples">Dead Tuples</span>
+                    <span class="bloat-col-size">Size</span>
                 </div>
                 <div class="bloat-table-list">
                     ${data.tables.map((t, i) => `
@@ -632,6 +693,7 @@
                                 <span class="bloat-schema">${escapeHtml(t.schema)}</span>.<span class="bloat-relname">${escapeHtml(t.table)}</span>
                             </span>
                             <span class="bloat-dead-tup">${t.n_dead_tup.toLocaleString()}</span>
+                            <span class="bloat-table-size">${t.table_size}</span>
                         </label>
                     `).join('')}
                 </div>

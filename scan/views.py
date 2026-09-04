@@ -8,7 +8,8 @@ from connections.models import DatabaseConnection
 
 @require_http_methods(["POST"])
 def check_bloat(request, connection_id):
-    """Query pg_stat_user_tables for dead tuples exceeding the given threshold."""
+    """Query pg_stat_user_tables for dead tuples exceeding the given threshold,
+    optionally filtering by minimum table size."""
     try:
         db_conn = DatabaseConnection.objects.get(id=connection_id)
     except DatabaseConnection.DoesNotExist:
@@ -17,12 +18,15 @@ def check_bloat(request, connection_id):
             'message': 'Connection not found.'
         }, status=404)
 
-    # Parse threshold from request body, default to 10000
+    # Parse parameters from request body
     threshold = 10000
+    min_table_size_kb = None
     if request.body:
         try:
             data = json.loads(request.body)
             threshold = int(data.get('threshold', 10000))
+            if 'min_table_size_kb' in data and data['min_table_size_kb'] is not None:
+                min_table_size_kb = int(data['min_table_size_kb'])
         except (json.JSONDecodeError, TypeError, ValueError):
             pass
 
@@ -36,21 +40,40 @@ def check_bloat(request, connection_id):
             connect_timeout=5,
         )
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT schemaname, relname, n_dead_tup
-            FROM pg_stat_user_tables
-            WHERE n_dead_tup >= %s
-            ORDER BY n_dead_tup DESC;
-            """,
-            [threshold],
-        )
+
+        # Build query based on whether min_table_size_kb is set
+        if min_table_size_kb is not None:
+            min_size_bytes = min_table_size_kb * 1024
+            cursor.execute(
+                """
+                SELECT schemaname, relname, n_dead_tup,
+                       pg_size_pretty(pg_relation_size(relid)) AS table_size
+                FROM pg_stat_user_tables
+                WHERE n_dead_tup >= %s
+                  AND pg_relation_size(relid) >= %s
+                ORDER BY n_dead_tup DESC;
+                """,
+                [threshold, min_size_bytes],
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT schemaname, relname, n_dead_tup,
+                       pg_size_pretty(pg_relation_size(relid)) AS table_size
+                FROM pg_stat_user_tables
+                WHERE n_dead_tup >= %s
+                ORDER BY n_dead_tup DESC;
+                """,
+                [threshold],
+            )
+
         rows = cursor.fetchall()
         tables = [
             {
                 'schema': row[0],
                 'table': row[1],
                 'n_dead_tup': row[2],
+                'table_size': row[3],
             }
             for row in rows
         ]
@@ -61,6 +84,7 @@ def check_bloat(request, connection_id):
             'success': True,
             'tables': tables,
             'threshold': threshold,
+            'min_table_size_kb': min_table_size_kb,
         })
     except psycopg2.OperationalError as e:
         return JsonResponse({

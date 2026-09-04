@@ -106,6 +106,26 @@ body {
     margin-left: 2px;
 }
 
+.form-label-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.form-label-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.form-input:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: var(--bg-secondary);
+}
+
 /* ===== BUTTONS ===== */
 .btn {
     display: inline-flex;
@@ -512,9 +532,21 @@ body {
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-4px); }
-    40%, 80% { transform: translateX(4px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20%,
+    60% {
+        transform: translateX(-4px);
+    }
+
+    40%,
+    80% {
+        transform: translateX(4px);
+    }
 }
 
 /* ===== BLOAT MODAL ===== */
@@ -560,8 +592,14 @@ body {
 }
 
 .bloat-col-tuples {
+    width: 160px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.bloat-col-size {
     width: 120px;
-    text-align: right;
+    text-align: center;
     flex-shrink: 0;
 }
 
@@ -617,7 +655,16 @@ body {
 
 .bloat-dead-tup {
     width: 120px;
-    text-align: right;
+    text-align: center;
+    font-weight: 600;
+    color: var(--danger);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.bloat-table-size {
+    width: 120px;
+    text-align: center;
     font-weight: 600;
     color: var(--danger);
     font-variant-numeric: tabular-nums;
