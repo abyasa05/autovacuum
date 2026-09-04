@@ -980,3 +980,142 @@ body {
         width: 80px;
     }
 }
+
+/* ===== FLOATING ACTION BUTTON ===== */
+.floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    padding: 14px 24px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    z-index: 100;
+    border: 1px solid var(--border-color);
+}
+
+.floating-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    background: var(--border-light);
+    color: var(--text-primary);
+}
+
+/* ===== HISTORY PAGE ===== */
+.history-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+    padding: 16px 24px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-table th {
+    background: var(--border-light);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-table tbody tr:hover {
+    background: var(--border-light);
+}
+
+.col-center {
+    text-align: center !important;
+}
+
+.db-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-success {
+    background: rgba(48, 164, 108, 0.1);
+    color: var(--success);
+}
+
+.status-partial_success {
+    background: rgba(229, 160, 0, 0.1);
+    color: var(--warning);
+}
+
+.status-fail {
+    background: rgba(229, 72, 77, 0.1);
+    color: var(--danger);
+}
+
+/* Icon Button */
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: var(--border-color);
+    color: var(--primary);
+}
+
+/* JSON Formatting */
+.detail-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+.json-display {
+    background: #f6f8fa;
+    padding: 16px;
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.85rem;
+    color: #24292f;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    border: 1px solid var(--border-color);
+    margin: 0;
+}

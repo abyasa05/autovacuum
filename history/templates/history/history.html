@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacuum History</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'connections/css/styles.css' %}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-content">
+                <h1>Vacuum History</h1>
+                <div class="header-actions">
+                    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="history-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Database Name</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th class="col-center">Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for history in histories %}
+                        <tr>
+                            <td class="db-name">{{ history.database_name }}</td>
+                            <td>
+                                <span class="status-badge status-{{ history.is_success }}">
+                                    {{ history.get_is_success_display }}
+                                </span>
+                            </td>
+                            <td>{{ history.vacuum_date|date:"M d, Y H:i" }}</td>
+                            <td class="col-center">
+                                {% if history.is_success != 'success' %}
+                                <button type="button" class="btn-icon open-detail-btn"
+                                    data-detail="{{ history.detail|escape }}">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                No vacuum history records found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModalOverlay">
+        <div class="modal-content detail-modal">
+            <div class="modal-header">
+                <h2>Execution Details</h2>
+            </div>
+            <div class="modal-body">
+                <pre id="detailContent" class="json-display"></pre>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('detailModalOverlay');
+        const content = document.getElementById('detailContent');
+
+        document.querySelectorAll('.open-detail-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const detailStr = e.currentTarget.getAttribute('data-detail');
+
+                try {
+                    // Try to parse and format as JSON
+                    const parsed = JSON.parse(detailStr);
+                    content.textContent = JSON.stringify(parsed, null, 2);
+                } catch (err) {
+                    // Fallback to raw string if not JSON
+                    content.textContent = detailStr;
+                }
+
+                modal.classList.add('active');
+            });
+        });
+
+        function closeDetailModal() {
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeDetailModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

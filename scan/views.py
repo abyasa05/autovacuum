@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from connections.models import DatabaseConnection
+from history.models import VacuumHistory
 
 
 @require_http_methods(["POST"])
@@ -178,6 +179,20 @@ def run_vacuum(request, connection_id):
             db_conn.last_vacuum = timezone.now()
             db_conn.save(update_fields=['last_vacuum'])
 
+        # Log to VacuumHistory
+        is_success = 'success'
+        detail = None
+        if skipped or errors:
+            is_success = 'partial_success'
+            detail = json.dumps({'skipped': skipped, 'errors': errors})
+
+        VacuumHistory.objects.create(
+            connection=db_conn,
+            database_name=db_conn.name,
+            is_success=is_success,
+            detail=detail
+        )
+
         return JsonResponse({
             'success': True,
             'vacuumed': vacuumed,
@@ -190,11 +205,23 @@ def run_vacuum(request, connection_id):
         })
 
     except psycopg2.OperationalError as e:
+        VacuumHistory.objects.create(
+            connection=db_conn,
+            database_name=db_conn.name,
+            is_success='fail',
+            detail=str(e).strip()
+        )
         return JsonResponse({
             'success': False,
             'message': f'Connection failed: {str(e).strip()}'
         })
     except Exception as e:
+        VacuumHistory.objects.create(
+            connection=db_conn,
+            database_name=db_conn.name,
+            is_success='fail',
+            detail=str(e).strip()
+        )
         return JsonResponse({
             'success': False,
             'message': f'Unexpected error: {str(e).strip()}'
