@@ -30,6 +30,13 @@ class DatabaseConnection(models.Model):
         help_text='Database password'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    last_vacuum = models.DateTimeField(
+        null=True,
+        blank=True,
+        default=None,
+        verbose_name='Last Vacuum',
+        help_text='Timestamp of the last vacuum operation'
+    )
 
     class Meta:
         ordering = ['-created_at']

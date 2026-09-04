@@ -297,24 +297,42 @@ body {
     word-break: break-all;
 }
 
-.card-footer {
+.card-meta {
     margin-top: 16px;
     padding-top: 12px;
     border-top: 1px solid var(--border-light);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.card-footer-actions {
+.card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+}
+
+.card-meta-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.card-meta-value {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.card-actions {
+    margin-top: 12px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.card-date {
-    font-size: 12px;
-    color: var(--text-muted);
+.card-actions .btn {
+    flex: 1;
+    justify-content: center;
 }
 
 /* ===== EMPTY STATE ===== */
@@ -639,6 +657,43 @@ body {
     color: var(--text-secondary);
 }
 
+/* ===== VACUUM BUTTON ===== */
+.btn-vacuum {
+    background: var(--success);
+    color: #fff;
+}
+
+.btn-vacuum:hover {
+    background: #279e63;
+    box-shadow: 0 4px 14px rgba(48, 164, 108, 0.35);
+    transform: translateY(-1px);
+}
+
+/* ===== VACUUM SUCCESS STATE ===== */
+.vacuum-success {
+    text-align: center;
+    padding: 32px 24px;
+    animation: alertFadeIn 0.3s ease;
+}
+
+.vacuum-success-icon {
+    color: var(--success);
+    margin-bottom: 12px;
+}
+
+.vacuum-success h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.vacuum-success p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
 /* ===== ALERT MESSAGES ===== */
 .alert {
     padding: 12px 16px;
@@ -858,19 +913,12 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .card-footer {
+    .card-actions {
         flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
     }
 
-    .card-footer-actions {
+    .card-actions .btn {
         width: 100%;
-    }
-
-    .card-footer-actions .btn {
-        flex: 1;
-        justify-content: center;
     }
 
     .form-row {

@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,212 +9,248 @@
     <title>AutoVacuum — PostgreSQL Connection Manager</title>
     <link rel="stylesheet" href="{% static 'connections/css/styles.css' %}">
 </head>
+
 <body>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-<div class="app-container">
+    <div class="app-container">
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <div class="header-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                    </svg>
+                </div>
+                <div>
+                    <h1>Database Connections</h1>
+                    <p>Manage your PostgreSQL database connections</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="btnSetThreshold" onclick="openThresholdModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14" />
+                        <line x1="4" y1="10" x2="4" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12" y2="3" />
+                        <line x1="20" y1="21" x2="20" y2="16" />
+                        <line x1="20" y1="12" x2="20" y2="3" />
+                        <line x1="1" y1="14" x2="7" y2="14" />
+                        <line x1="9" y1="8" x2="15" y2="8" />
+                        <line x1="17" y1="16" x2="23" y2="16" />
+                    </svg>
+                    Dead Tuple Threshold
+                    <span class="threshold-badge" id="thresholdBadge">10,000</span>
+                </button>
+                <button class="btn btn-primary" id="btnAddConnection" onclick="openModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add Connection
+                </button>
+            </div>
+        </header>
+
+        <!-- Connections Grid -->
+        <div class="connections-grid" id="connectionsGrid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
                 </svg>
             </div>
-            <div>
-                <h1>Database Connections</h1>
-                <p>Manage your PostgreSQL database connections</p>
-            </div>
+            <h3>No connections yet</h3>
+            <p>Click "Add Connection" to save your first PostgreSQL database connection.</p>
         </div>
-        <div class="header-actions">
-            <button class="btn btn-secondary" id="btnSetThreshold" onclick="openThresholdModal()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
-                    <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
-                    <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
-                    <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
-                </svg>
-                Dead Tuple Threshold
-                <span class="threshold-badge" id="thresholdBadge">10,000</span>
-            </button>
-            <button class="btn btn-primary" id="btnAddConnection" onclick="openModal()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add Connection
-            </button>
-        </div>
-    </header>
 
-    <!-- Connections Grid -->
-    <div class="connections-grid" id="connectionsGrid"></div>
-
-    <!-- Empty State -->
-    <div class="empty-state" id="emptyState" style="display: none;">
-        <div class="empty-state-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-            </svg>
-        </div>
-        <h3>No connections yet</h3>
-        <p>Click "Add Connection" to save your first PostgreSQL database connection.</p>
     </div>
 
-</div>
+    <!-- Add Connection Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>New Connection</h2>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="connectionForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <label class="form-label" for="connName">Connection Name</label>
+                        <input class="form-input" type="text" id="connName" placeholder="e.g. Production DB" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="connHost">Host</label>
+                            <input class="form-input" type="text" id="connHost" placeholder="e.g. localhost" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="connPort">Port</label>
+                            <input class="form-input" type="number" id="connPort" placeholder="5432" value="5432"
+                                required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="connDbname">Database Name</label>
+                        <input class="form-input" type="text" id="connDbname" placeholder="e.g. my_database" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="connUsername">Username</label>
+                        <input class="form-input" type="text" id="connUsername" placeholder="e.g. postgres" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="connPassword">Password</label>
+                        <input class="form-input" type="password" id="connPassword" placeholder="Enter password">
+                    </div>
 
-<!-- Add Connection Modal -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-        <div class="modal-header">
-            <h2>New Connection</h2>
-            <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+                    <button type="button" class="btn btn-test" id="btnTestConnection" onclick="testConnection()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                        Test Connection
+                    </button>
+
+                    <!-- Alert for test results -->
+                    <div class="alert" id="testAlert">
+                        <span id="testAlertIcon"></span>
+                        <span id="testAlertMessage"></span>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="btnSaveConnection" onclick="saveConnection()">
+                            Save Connection
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="connectionForm" onsubmit="return false;">
-                <div class="form-group">
-                    <label class="form-label" for="connName">Connection Name</label>
-                    <input class="form-input" type="text" id="connName" placeholder="e.g. Production DB" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="connHost">Host</label>
-                        <input class="form-input" type="text" id="connHost" placeholder="e.g. localhost" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="connPort">Port</label>
-                        <input class="form-input" type="number" id="connPort" placeholder="5432" value="5432" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="connDbname">Database Name</label>
-                    <input class="form-input" type="text" id="connDbname" placeholder="e.g. my_database" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="connUsername">Username</label>
-                    <input class="form-input" type="text" id="connUsername" placeholder="e.g. postgres" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="connPassword">Password</label>
-                    <input class="form-input" type="password" id="connPassword" placeholder="Enter password">
-                </div>
+    </div>
 
-                <button type="button" class="btn btn-test" id="btnTestConnection" onclick="testConnection()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    Test Connection
-                </button>
+    <!-- Delete Confirmation -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-dialog">
+            <h3>Delete Connection</h3>
+            <p>Are you sure you want to delete "<span id="confirmConnName"></span>"? This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+                <button class="btn btn-confirm-delete" id="btnConfirmDelete" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- Alert for test results -->
-                <div class="alert" id="testAlert">
-                    <span id="testAlertIcon"></span>
-                    <span id="testAlertMessage"></span>
+    <!-- Threshold Settings Modal -->
+    <div class="modal-overlay" id="thresholdModalOverlay">
+        <div class="modal threshold-modal">
+            <div class="modal-header">
+                <h2>Dead Tuple Threshold</h2>
+                <button class="modal-close" onclick="closeThresholdModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="threshold-description">Set the minimum threshold value for considering a vacuum on a table.
+                </p>
+                <div class="form-group">
+                    <label class="form-label" for="thresholdInput">Minimum Dead Tuples</label>
+                    <input class="form-input" type="number" id="thresholdInput" min="0" step="1" placeholder="10000">
                 </div>
-
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="btnSaveConnection" onclick="saveConnection()">
-                        Save Connection
+                    <button type="button" class="btn btn-secondary" onclick="closeThresholdModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveThreshold()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bloated Tables Modal -->
+    <div class="modal-overlay" id="bloatModalOverlay">
+        <div class="modal bloat-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 id="bloatModalTitle">Bloated Tables</h2>
+                    <p class="bloat-modal-subtitle" id="bloatModalSubtitle">Threshold: 10,000 dead tuples</p>
+                </div>
+                <button class="modal-close" onclick="closeBloatModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="bloatModalContent"></div>
+                <div class="modal-actions bloat-modal-actions" id="bloatModalActions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBloatModal()">Cancel</button>
+                    <button type="button" class="btn btn-vacuum" id="btnRunVacuum" onclick="runVacuum()" disabled>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                            <polyline points="22 2 13 11 9 7" />
+                        </svg>
+                        Run Vacuum
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation -->
-<div class="confirm-overlay" id="confirmOverlay">
-    <div class="confirm-dialog">
-        <h3>Delete Connection</h3>
-        <p>Are you sure you want to delete "<span id="confirmConnName"></span>"? This action cannot be undone.</p>
-        <div class="confirm-actions">
-            <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
-            <button class="btn btn-confirm-delete" id="btnConfirmDelete" onclick="confirmDelete()">Delete</button>
-        </div>
-    </div>
-</div>
-
-<!-- Threshold Settings Modal -->
-<div class="modal-overlay" id="thresholdModalOverlay">
-    <div class="modal threshold-modal">
-        <div class="modal-header">
-            <h2>Dead Tuple Threshold</h2>
-            <button class="modal-close" onclick="closeThresholdModal()" aria-label="Close modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p class="threshold-description">Set the minimum threshold value for considering a vacuum on a table.</p>
-            <div class="form-group">
-                <label class="form-label" for="thresholdInput">Minimum Dead Tuples</label>
-                <input class="form-input" type="number" id="thresholdInput" min="0" step="1" placeholder="10000">
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeThresholdModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveThreshold()">Save</button>
+                <div class="vacuum-success" id="vacuumSuccess" style="display: none;">
+                    <div class="vacuum-success-icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                    </div>
+                    <h3 id="vacuumSuccessTitle">Vacuum Complete</h3>
+                    <p id="vacuumSuccessMessage"></p>
+                    <button type="button" class="btn btn-primary" onclick="closeBloatModal()"
+                        style="margin-top: 16px;">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Bloated Tables Modal -->
-<div class="modal-overlay" id="bloatModalOverlay">
-    <div class="modal bloat-modal">
-        <div class="modal-header">
-            <div>
-                <h2 id="bloatModalTitle">Bloated Tables</h2>
-                <p class="bloat-modal-subtitle" id="bloatModalSubtitle">Threshold: 10,000 dead tuples</p>
-            </div>
-            <button class="modal-close" onclick="closeBloatModal()" aria-label="Close modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div id="bloatModalContent"></div>
-            <div class="modal-actions bloat-modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeBloatModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <script>
+        // ===== STATE =====
+        let connections = JSON.parse('{{ connections_json|escapejs }}');
+        let pendingDeleteId = null;
+        let deadTupleThreshold = parseInt(localStorage.getItem('deadTupleThreshold')) || 10000;
+        let currentBloatConnectionId = null;
 
-<script>
-    // ===== STATE =====
-    let connections = JSON.parse('{{ connections_json|escapejs }}');
-    let pendingDeleteId = null;
-    let deadTupleThreshold = parseInt(localStorage.getItem('deadTupleThreshold')) || 10000;
+        // Update threshold badge on load
+        document.getElementById('thresholdBadge').textContent = deadTupleThreshold.toLocaleString();
 
-    // Update threshold badge on load
-    document.getElementById('thresholdBadge').textContent = deadTupleThreshold.toLocaleString();
-
-    // ===== CSRF =====
-    function getCookie(name) {
-        let value = null;
-        document.cookie.split(';').forEach(c => {
-            c = c.trim();
-            if (c.startsWith(name + '=')) value = decodeURIComponent(c.substring(name.length + 1));
-        });
-        return value;
-    }
-    const csrfToken = getCookie('csrftoken');
-
-    // ===== RENDER =====
-    function renderConnections() {
-        const grid = document.getElementById('connectionsGrid');
-        const empty = document.getElementById('emptyState');
-
-        if (connections.length === 0) {
-            grid.innerHTML = '';
-            empty.style.display = 'block';
-            return;
+        // ===== CSRF =====
+        function getCookie(name) {
+            let value = null;
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.startsWith(name + '=')) value = decodeURIComponent(c.substring(name.length + 1));
+            });
+            return value;
         }
+        const csrfToken = getCookie('csrftoken');
 
-        empty.style.display = 'none';
-        grid.innerHTML = connections.map(conn => `
+        // ===== RENDER =====
+        function renderConnections() {
+            const grid = document.getElementById('connectionsGrid');
+            const empty = document.getElementById('emptyState');
+
+            if (connections.length === 0) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            grid.innerHTML = connections.map(conn => `
             <div class="connection-card" id="card-${conn.id}">
                 <div class="card-header">
                     <span class="card-title">${escapeHtml(conn.name)}</span>
@@ -260,302 +297,315 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span class="card-date">Added ${escapeHtml(conn.created_at)}</span>
-                    <div class="card-footer-actions">
-                        <button class="btn btn-bloat-card" id="btnBloatCard-${conn.id}" onclick="checkBloatness(${conn.id}, '${escapeHtml(conn.name)}')" title="Check bloatness">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
-                            </svg>
-                            Check Bloatness
-                        </button>
-                        <button class="btn btn-test-card" id="btnTestCard-${conn.id}" onclick="testSavedConnection(${conn.id})" title="Test connection">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            Test
-                        </button>
+                <div class="card-meta">
+                    <div class="card-meta-row">
+                        <span class="card-meta-label">Added</span>
+                        <span class="card-meta-value">${escapeHtml(conn.created_at)}</span>
                     </div>
+                    <div class="card-meta-row">
+                        <span class="card-meta-label">Last Vacuum</span>
+                        <span class="card-meta-value" id="lastVacuum-${conn.id}">${conn.last_vacuum ? escapeHtml(conn.last_vacuum) : '—'}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-bloat-card" id="btnBloatCard-${conn.id}" onclick="checkBloatness(${conn.id}, '${escapeHtml(conn.name)}')" title="Check bloatness">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
+                        </svg>
+                        Check Bloatness
+                    </button>
+                    <button class="btn btn-test-card" id="btnTestCard-${conn.id}" onclick="testSavedConnection(${conn.id})" title="Test connection">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Test
+                    </button>
                 </div>
             </div>
         `).join('');
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ===== MODAL =====
-    function openModal() {
-        document.getElementById('modalOverlay').classList.add('active');
-        document.getElementById('connectionForm').reset();
-        document.getElementById('connPort').value = '5432';
-        hideAlert();
-        document.getElementById('connName').focus();
-    }
-
-    function closeModal() {
-        document.getElementById('modalOverlay').classList.remove('active');
-    }
-
-    // ===== FORM DATA =====
-    function getFormData() {
-        return {
-            name: document.getElementById('connName').value.trim(),
-            host: document.getElementById('connHost').value.trim(),
-            port: parseInt(document.getElementById('connPort').value) || 5432,
-            dbname: document.getElementById('connDbname').value.trim(),
-            username: document.getElementById('connUsername').value.trim(),
-            password: document.getElementById('connPassword').value,
-        };
-    }
-
-    // ===== ALERT =====
-    function showAlert(type, message) {
-        const alert = document.getElementById('testAlert');
-        const icon = document.getElementById('testAlertIcon');
-        const msg = document.getElementById('testAlertMessage');
-
-        alert.className = `alert alert-${type} show`;
-        icon.textContent = type === 'success' ? '✓' : '✗';
-        msg.textContent = message;
-    }
-
-    function hideAlert() {
-        document.getElementById('testAlert').className = 'alert';
-    }
-
-    // ===== TOAST =====
-    function showToast(type, message) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `<span>${type === 'success' ? '✓' : '✗'}</span><span>${escapeHtml(message)}</span>`;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('removing');
-            toast.addEventListener('animationend', () => toast.remove());
-        }, 4000);
-    }
-
-    // ===== TEST CONNECTION =====
-    async function testConnection() {
-        const data = getFormData();
-        if (!data.host || !data.dbname || !data.username) {
-            showAlert('error', 'Please fill in host, database name, and username.');
-            return;
         }
 
-        const btn = document.getElementById('btnTestConnection');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Testing...';
-        hideAlert();
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-        try {
-            const res = await fetch('/api/connections/test/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: JSON.stringify(data),
-            });
-            const result = await res.json();
-            showAlert(result.success ? 'success' : 'error', result.message);
-        } catch (err) {
-            showAlert('error', 'Network error. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `
+        // ===== MODAL =====
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('connectionForm').reset();
+            document.getElementById('connPort').value = '5432';
+            hideAlert();
+            document.getElementById('connName').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        // ===== FORM DATA =====
+        function getFormData() {
+            return {
+                name: document.getElementById('connName').value.trim(),
+                host: document.getElementById('connHost').value.trim(),
+                port: parseInt(document.getElementById('connPort').value) || 5432,
+                dbname: document.getElementById('connDbname').value.trim(),
+                username: document.getElementById('connUsername').value.trim(),
+                password: document.getElementById('connPassword').value,
+            };
+        }
+
+        // ===== ALERT =====
+        function showAlert(type, message) {
+            const alert = document.getElementById('testAlert');
+            const icon = document.getElementById('testAlertIcon');
+            const msg = document.getElementById('testAlertMessage');
+
+            alert.className = `alert alert-${type} show`;
+            icon.textContent = type === 'success' ? '✓' : '✗';
+            msg.textContent = message;
+        }
+
+        function hideAlert() {
+            document.getElementById('testAlert').className = 'alert';
+        }
+
+        // ===== TOAST =====
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✓' : '✗'}</span><span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('removing');
+                toast.addEventListener('animationend', () => toast.remove());
+            }, 4000);
+        }
+
+        // ===== TEST CONNECTION =====
+        async function testConnection() {
+            const data = getFormData();
+            if (!data.host || !data.dbname || !data.username) {
+                showAlert('error', 'Please fill in host, database name, and username.');
+                return;
+            }
+
+            const btn = document.getElementById('btnTestConnection');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Testing...';
+            hideAlert();
+
+            try {
+                const res = await fetch('/api/connections/test/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify(data),
+                });
+                const result = await res.json();
+                showAlert(result.success ? 'success' : 'error', result.message);
+            } catch (err) {
+                showAlert('error', 'Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                     <polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
                 Test Connection`;
-        }
-    }
-
-    // ===== SAVE CONNECTION =====
-    async function saveConnection() {
-        const data = getFormData();
-        if (!data.name || !data.host || !data.dbname || !data.username) {
-            showAlert('error', 'Please fill in all required fields (name, host, database, username).');
-            return;
-        }
-
-        const btn = document.getElementById('btnSaveConnection');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Saving...';
-        hideAlert();
-
-        try {
-            const res = await fetch('/api/connections/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: JSON.stringify(data),
-            });
-            const result = await res.json();
-
-            if (result.success) {
-                connections.unshift(result.connection);
-                renderConnections();
-                closeModal();
-                showToast('success', result.message);
-            } else {
-                showAlert('error', result.message);
             }
-        } catch (err) {
-            showAlert('error', 'Network error. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Save Connection';
         }
-    }
 
-    // ===== TEST SAVED CONNECTION =====
-    async function testSavedConnection(id) {
-        const btn = document.getElementById(`btnTestCard-${id}`);
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Testing...';
+        // ===== SAVE CONNECTION =====
+        async function saveConnection() {
+            const data = getFormData();
+            if (!data.name || !data.host || !data.dbname || !data.username) {
+                showAlert('error', 'Please fill in all required fields (name, host, database, username).');
+                return;
+            }
 
-        try {
-            const res = await fetch(`/api/connections/${id}/test/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken },
-            });
-            const result = await res.json();
-            showToast(result.success ? 'success' : 'error', result.message);
-        } catch (err) {
-            showToast('error', 'Network error. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `
+            const btn = document.getElementById('btnSaveConnection');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Saving...';
+            hideAlert();
+
+            try {
+                const res = await fetch('/api/connections/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify(data),
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    connections.unshift(result.connection);
+                    renderConnections();
+                    closeModal();
+                    showToast('success', result.message);
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (err) {
+                showAlert('error', 'Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Connection';
+            }
+        }
+
+        // ===== TEST SAVED CONNECTION =====
+        async function testSavedConnection(id) {
+            const btn = document.getElementById(`btnTestCard-${id}`);
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Testing...';
+
+            try {
+                const res = await fetch(`/api/connections/${id}/test/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                });
+                const result = await res.json();
+                showToast(result.success ? 'success' : 'error', result.message);
+            } catch (err) {
+                showToast('error', 'Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                     <polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
                 Test`;
-        }
-    }
-
-    // ===== DELETE =====
-    function promptDelete(id, name) {
-        pendingDeleteId = id;
-        document.getElementById('confirmConnName').textContent = name;
-        document.getElementById('confirmOverlay').classList.add('active');
-    }
-
-    function closeConfirm() {
-        document.getElementById('confirmOverlay').classList.remove('active');
-        pendingDeleteId = null;
-    }
-
-    async function confirmDelete() {
-        if (!pendingDeleteId) return;
-
-        const btn = document.getElementById('btnConfirmDelete');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
-
-        try {
-            const res = await fetch(`/api/connections/${pendingDeleteId}/delete/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': csrfToken },
-            });
-            const result = await res.json();
-
-            if (result.success) {
-                connections = connections.filter(c => c.id !== pendingDeleteId);
-                renderConnections();
-                showToast('success', result.message);
-            } else {
-                showToast('error', result.message);
             }
-        } catch (err) {
-            showToast('error', 'Network error. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Delete';
-            closeConfirm();
         }
-    }
 
-    // ===== THRESHOLD MODAL =====
-    function openThresholdModal() {
-        document.getElementById('thresholdInput').value = deadTupleThreshold;
-        document.getElementById('thresholdModalOverlay').classList.add('active');
-        document.getElementById('thresholdInput').focus();
-    }
-
-    function closeThresholdModal() {
-        document.getElementById('thresholdModalOverlay').classList.remove('active');
-    }
-
-    function saveThreshold() {
-        const input = document.getElementById('thresholdInput');
-        const value = parseInt(input.value);
-        if (isNaN(value) || value < 0) {
-            input.classList.add('input-error');
-            setTimeout(() => input.classList.remove('input-error'), 600);
-            return;
+        // ===== DELETE =====
+        function promptDelete(id, name) {
+            pendingDeleteId = id;
+            document.getElementById('confirmConnName').textContent = name;
+            document.getElementById('confirmOverlay').classList.add('active');
         }
-        deadTupleThreshold = value;
-        localStorage.setItem('deadTupleThreshold', value);
-        document.getElementById('thresholdBadge').textContent = value.toLocaleString();
-        closeThresholdModal();
-        showToast('success', `Threshold updated to ${value.toLocaleString()} dead tuples.`);
-    }
 
-    // ===== CHECK BLOATNESS =====
-    async function checkBloatness(connectionId, connectionName) {
-        const btn = document.getElementById(`btnBloatCard-${connectionId}`);
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Checking...';
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('active');
+            pendingDeleteId = null;
+        }
 
-        try {
-            const res = await fetch(`/api/connections/${connectionId}/bloat/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: JSON.stringify({ threshold: deadTupleThreshold }),
-            });
-            const result = await res.json();
+        async function confirmDelete() {
+            if (!pendingDeleteId) return;
 
-            if (result.success) {
-                openBloatModal(result, connectionName);
-            } else {
-                showToast('error', result.message);
+            const btn = document.getElementById('btnConfirmDelete');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>';
+
+            try {
+                const res = await fetch(`/api/connections/${pendingDeleteId}/delete/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': csrfToken },
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    connections = connections.filter(c => c.id !== pendingDeleteId);
+                    renderConnections();
+                    showToast('success', result.message);
+                } else {
+                    showToast('error', result.message);
+                }
+            } catch (err) {
+                showToast('error', 'Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Delete';
+                closeConfirm();
             }
-        } catch (err) {
-            showToast('error', 'Network error. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `
+        }
+
+        // ===== THRESHOLD MODAL =====
+        function openThresholdModal() {
+            document.getElementById('thresholdInput').value = deadTupleThreshold;
+            document.getElementById('thresholdModalOverlay').classList.add('active');
+            document.getElementById('thresholdInput').focus();
+        }
+
+        function closeThresholdModal() {
+            document.getElementById('thresholdModalOverlay').classList.remove('active');
+        }
+
+        function saveThreshold() {
+            const input = document.getElementById('thresholdInput');
+            const value = parseInt(input.value);
+            if (isNaN(value) || value < 0) {
+                input.classList.add('input-error');
+                setTimeout(() => input.classList.remove('input-error'), 600);
+                return;
+            }
+            deadTupleThreshold = value;
+            localStorage.setItem('deadTupleThreshold', value);
+            document.getElementById('thresholdBadge').textContent = value.toLocaleString();
+            closeThresholdModal();
+            showToast('success', `Threshold updated to ${value.toLocaleString()} dead tuples.`);
+        }
+
+        // ===== CHECK BLOATNESS =====
+        async function checkBloatness(connectionId, connectionName) {
+            const btn = document.getElementById(`btnBloatCard-${connectionId}`);
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Checking...';
+
+            try {
+                const res = await fetch(`/api/connections/${connectionId}/bloat/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ threshold: deadTupleThreshold }),
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    openBloatModal(result, connectionName, connectionId);
+                } else {
+                    showToast('error', result.message);
+                }
+            } catch (err) {
+                showToast('error', 'Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/>
                 </svg>
                 Check Bloatness`;
+            }
         }
-    }
 
-    // ===== BLOAT MODAL =====
-    function openBloatModal(data, connectionName) {
-        document.getElementById('bloatModalTitle').textContent = `Bloated Tables — ${connectionName}`;
-        document.getElementById('bloatModalSubtitle').textContent = `Threshold: ${data.threshold.toLocaleString()} dead tuples`;
+        // ===== BLOAT MODAL =====
+        function openBloatModal(data, connectionName, connectionId) {
+            currentBloatConnectionId = connectionId;
+            document.getElementById('bloatModalTitle').textContent = `Bloated Tables — ${connectionName}`;
+            document.getElementById('bloatModalSubtitle').textContent = `Threshold: ${data.threshold.toLocaleString()} dead tuples`;
 
-        const content = document.getElementById('bloatModalContent');
+            // Reset to checklist view (hide success state)
+            document.getElementById('bloatModalContent').style.display = '';
+            document.getElementById('bloatModalActions').style.display = '';
+            document.getElementById('vacuumSuccess').style.display = 'none';
 
-        if (data.tables.length === 0) {
-            content.innerHTML = `
+            const content = document.getElementById('bloatModalContent');
+
+            if (data.tables.length === 0) {
+                content.innerHTML = `
                 <div class="bloat-empty">
                     <div class="bloat-empty-icon">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -567,8 +617,8 @@
                     <p>No tables exceed ${data.threshold.toLocaleString()} dead tuples.</p>
                 </div>
             `;
-        } else {
-            content.innerHTML = `
+            } else {
+                content.innerHTML = `
                 <div class="bloat-table-header">
                     <span class="bloat-col-check"></span>
                     <span class="bloat-col-table">Table</span>
@@ -589,50 +639,118 @@
                     ${data.tables.length} table${data.tables.length !== 1 ? 's' : ''} with dead tuples exceeding threshold
                 </div>
             `;
+            }
+
+            document.getElementById('bloatModalOverlay').classList.add('active');
+            updateVacuumButtonState();
+
+            // Listen for checkbox changes to toggle button state
+            document.getElementById('bloatModalContent').addEventListener('change', (e) => {
+                if (e.target.classList.contains('bloat-checkbox')) updateVacuumButtonState();
+            });
         }
 
-        document.getElementById('bloatModalOverlay').classList.add('active');
-    }
+        function updateVacuumButtonState() {
+            const anyChecked = document.querySelectorAll('.bloat-checkbox:checked').length > 0;
+            document.getElementById('btnRunVacuum').disabled = !anyChecked;
+        }
 
-    function closeBloatModal() {
-        document.getElementById('bloatModalOverlay').classList.remove('active');
-    }
+        function closeBloatModal() {
+            document.getElementById('bloatModalOverlay').classList.remove('active');
+            currentBloatConnectionId = null;
+        }
 
-    // ===== KEYBOARD SHORTCUTS =====
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (document.getElementById('confirmOverlay').classList.contains('active')) {
-                closeConfirm();
-            } else if (document.getElementById('bloatModalOverlay').classList.contains('active')) {
-                closeBloatModal();
-            } else if (document.getElementById('thresholdModalOverlay').classList.contains('active')) {
-                closeThresholdModal();
-            } else if (document.getElementById('modalOverlay').classList.contains('active')) {
-                closeModal();
+        // ===== RUN VACUUM =====
+        async function runVacuum() {
+            const checkboxes = document.querySelectorAll('.bloat-checkbox:checked');
+            if (checkboxes.length === 0) {
+                showToast('error', 'Please select at least one table to vacuum.');
+                return;
+            }
+
+            const tables = Array.from(checkboxes).map(cb => cb.value);
+            const btn = document.getElementById('btnRunVacuum');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Running Vacuum...';
+
+            try {
+                const res = await fetch(`/api/connections/${currentBloatConnectionId}/vacuum/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({ tables }),
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    // Update last_vacuum on the connection in our local state
+                    if (result.last_vacuum) {
+                        const conn = connections.find(c => c.id === currentBloatConnectionId);
+                        if (conn) conn.last_vacuum = result.last_vacuum;
+                        const lastVacEl = document.getElementById(`lastVacuum-${currentBloatConnectionId}`);
+                        if (lastVacEl) lastVacEl.textContent = result.last_vacuum;
+                    }
+
+                    // Show success state
+                    document.getElementById('bloatModalContent').style.display = 'none';
+                    document.getElementById('bloatModalActions').style.display = 'none';
+                    document.getElementById('vacuumSuccessTitle').textContent = 'Vacuum Complete';
+                    document.getElementById('vacuumSuccessMessage').textContent = result.message;
+                    document.getElementById('vacuumSuccess').style.display = '';
+                } else {
+                    showToast('error', result.message);
+                }
+            } catch (err) {
+                showToast('error', 'Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    <polyline points="22 2 13 11 9 7"/>
+                </svg>
+                Run Vacuum`;
             }
         }
-    });
 
-    // Close modal on overlay click
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeModal();
-    });
+        // ===== KEYBOARD SHORTCUTS =====
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('confirmOverlay').classList.contains('active')) {
+                    closeConfirm();
+                } else if (document.getElementById('bloatModalOverlay').classList.contains('active')) {
+                    closeBloatModal();
+                } else if (document.getElementById('thresholdModalOverlay').classList.contains('active')) {
+                    closeThresholdModal();
+                } else if (document.getElementById('modalOverlay').classList.contains('active')) {
+                    closeModal();
+                }
+            }
+        });
 
-    document.getElementById('confirmOverlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeConfirm();
-    });
+        // Close modal on overlay click
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
 
-    document.getElementById('thresholdModalOverlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeThresholdModal();
-    });
+        document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeConfirm();
+        });
 
-    document.getElementById('bloatModalOverlay').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeBloatModal();
-    });
+        document.getElementById('thresholdModalOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeThresholdModal();
+        });
 
-    // ===== INIT =====
-    renderConnections();
-</script>
+        document.getElementById('bloatModalOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeBloatModal();
+        });
+
+        // ===== INIT =====
+        renderConnections();
+    </script>
 
 </body>
+
 </html>

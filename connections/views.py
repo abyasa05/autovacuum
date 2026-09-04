@@ -20,6 +20,7 @@ def dashboard_view(request):
             'dbname': conn.dbname,
             'username': conn.username,
             'created_at': conn.created_at.strftime('%b %d, %Y %H:%M'),
+            'last_vacuum': conn.last_vacuum.strftime('%b %d, %Y %H:%M') if conn.last_vacuum else None,
         }
         for conn in connections
     ]
@@ -194,6 +195,7 @@ def add_connection(request):
             'dbname': db_conn.dbname,
             'username': db_conn.username,
             'created_at': db_conn.created_at.strftime('%b %d, %Y %H:%M'),
+            'last_vacuum': None,
         }
     })
 
