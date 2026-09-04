@@ -688,7 +688,7 @@
                 <div class="bloat-table-list">
                     ${data.tables.map((t, i) => `
                         <label class="bloat-table-row" for="bloat-check-${i}">
-                            <input type="checkbox" id="bloat-check-${i}" class="bloat-checkbox" value="${escapeHtml(t.schema)}.${escapeHtml(t.table)}">
+                            <input type="checkbox" id="bloat-check-${i}" class="bloat-checkbox" value="${escapeHtml(t.schema)}.${escapeHtml(t.table)}" checked>
                             <span class="bloat-table-name">
                                 <span class="bloat-schema">${escapeHtml(t.schema)}</span>.<span class="bloat-relname">${escapeHtml(t.table)}</span>
                             </span>
