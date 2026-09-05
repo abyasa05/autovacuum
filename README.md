@@ -1,20 +1,22 @@
-# AutoVacuum — PostgreSQL Connection Manager
+# AutoVacuum — PostgreSQL Database Cleaner
 
-A single-page Django dashboard for managing PostgreSQL database connections. Add, test, and remove connections through a clean web interface.
+A comprehensive Django-based dashboard for managing & maintaining PostgreSQL databases. It allows you to securely save database connections, analyze table bloat, and perform `VACUUM ANALYZE` operations across multiple tables with ease.
 
 ## Features
 
-- **Add Connections** — Save PostgreSQL connection credentials via a modal form
-- **Test Connections** — Verify database connectivity before saving (uses `psycopg2`)
-- **View Connections** — Browse all saved connections displayed as cards
-- **Delete Connections** — Remove connections with a confirmation dialog
+- **Database Connections** — Add, test, edit, and safely remove PostgreSQL connections via a clean dashboard interface.
+- **Secure Credentials** — Database passwords are automatically encrypted in the database using symmetric encryption (Fernet) and Django's SECRET_KEY.
+- **Bloat Analysis** — Connect to your database and quickly identify tables with excessive dead tuples and large relation sizes.
+- **Custom Vacuum Conditions** — Define your own thresholds for "Minimum Dead Tuples" and an optional "Minimum Table Size (KB)" to filter bloated tables.
+- **One-Click Vacuuming** — Execute `VACUUM ANALYZE` on selected bloated tables to recover storage and update query planner statistics.
+- **Automated History Logging** — Every vacuum operation is automatically logged into a detailed Vacuum History page, capturing successes, partial failures (e.g., skipped tables), and connection errors with easily readable formatted JSON logs.
 
 ## Tech Stack
 
 | Layer    | Technology              |
 |----------|------------------------|
 | Backend  | Django 5.x             |
-| Database | SQLite (app metadata)  |
+| Database | PostgreSQL (app metadata & history) |
 | Connector| psycopg2-binary        |
 | Frontend | HTML / CSS / JavaScript |
 
@@ -25,78 +27,24 @@ A single-page Django dashboard for managing PostgreSQL database connections. Add
 
 ## Quick Start
 
-### 1. Install dependencies
+### 1. Clone repository
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/abyasa05/autovacuum.git
 ```
 
-### 2. Run database migrations
+### 2. Initialize container
 
 ```bash
-python manage.py migrate
+docker compose up --build -d
 ```
 
-### 3. Start the development server
-
-```bash
-python manage.py runserver
-```
-
-### 4. Open your browser
+### 3. Open your browser
 
 Navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000)
-
-## Project Structure
-
-```
-autovacuum/
-├── config/                  # Django project settings
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── connections/             # Main application
-│   ├── static/
-│   │   └── connections/css/styles.css
-│   ├── templates/
-│   │   └── connections/dashboard.html
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── models.py
-│   ├── urls.py
-│   └── views.py
-├── manage.py
-├── requirements.txt
-└── README.md
-```
-
-## API Endpoints
-
-| Method   | URL                                    | Description              |
-|----------|----------------------------------------|--------------------------|
-| `GET`    | `/`                                    | Dashboard page           |
-| `POST`   | `/api/connections/`                   | Add a new connection     |
-| `POST`   | `/api/connections/test/`              | Test connection (no save)|
-| `DELETE`  | `/api/connections/<id>/delete/`       | Delete a connection      |
-
-## Data Model
-
-**DatabaseConnection**
-
-| Field       | Type         | Description                     |
-|-------------|--------------|----------------------------------|
-| `name`      | CharField    | Friendly label for the connection|
-| `host`      | CharField    | Database server hostname / IP    |
-| `port`      | IntegerField | Server port (default: 5432)      |
-| `dbname`    | CharField    | PostgreSQL database name         |
-| `username`  | CharField    | Database username                |
-| `password`  | CharField    | Database password                |
-| `created_at`| DateTimeField| Auto-set on creation             |
 
 ## Notes
 
 - This application does **not** include an authentication system — it is intended for internal/development use.
-- Connection passwords are stored in plain text in the local SQLite database.
-- The SQLite database (`db.sqlite3`) only stores connection metadata; actual PostgreSQL operations use `psycopg2` to connect directly.
+- The SQLite database (`db.sqlite3`) only stores connection metadata and vacuum history; actual PostgreSQL operations use `psycopg2` to connect directly.
+- Vacuum execution is currently ran synchronously. This might potentially create timeout issues when vacuuming very large tables.
