@@ -46,5 +46,5 @@ Navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000)
 ## Notes
 
 - This application does **not** include an authentication system — it is intended for internal/development use.
-- The SQLite database (`db.sqlite3`) only stores connection metadata and vacuum history; actual PostgreSQL operations use `psycopg2` to connect directly.
-- Vacuum execution is currently ran synchronously. This might potentially create timeout issues when vacuuming very large tables.
+- The internal PostgreSQL database only stores connection metadata and vacuum history; actual PostgreSQL operations use `psycopg2` to connect directly.
+- Vacuum execution is currently ran synchronously. This might potentially create timeout issues when vacuuming very large tables (needs further testing).
