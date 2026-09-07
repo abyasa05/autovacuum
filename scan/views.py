@@ -3,10 +3,12 @@ import psycopg2
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from connections.models import DatabaseConnection
 from history.models import VacuumHistory
 
 
+@login_required
 @require_http_methods(["POST"])
 def check_bloat(request, connection_id):
     """Query pg_stat_user_tables for dead tuples exceeding the given threshold,
@@ -99,6 +101,7 @@ def check_bloat(request, connection_id):
         })
 
 
+@login_required
 @require_http_methods(["POST"])
 def run_vacuum(request, connection_id):
     """Run VACUUM ANALYZE on selected tables for a given connection."""

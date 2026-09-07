@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'connections',
     'scan',
     'history',
+    'authentication',
 ]
 
 MIDDLEWARE = [
@@ -86,6 +87,15 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
+
+# Authentication
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+PASSWORD_HASHERS = [
+    'authentication.hashers.CustomBcryptPasswordHasher',
+]
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'

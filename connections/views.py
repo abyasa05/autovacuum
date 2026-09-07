@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from .models import DatabaseConnection
 
 
@@ -40,6 +41,7 @@ def _test_pg_connection(host, port, dbname, user, password):
         })
 
 
+@login_required
 @ensure_csrf_cookie
 def dashboard_view(request):
     """Render the single-page dashboard with all saved connections."""
@@ -62,6 +64,7 @@ def dashboard_view(request):
     })
 
 
+@login_required
 @require_http_methods(["POST"])
 def test_connection(request):
     """Test a PostgreSQL connection without saving it."""
@@ -90,6 +93,7 @@ def test_connection(request):
     return _test_pg_connection(host, port, dbname, username, password)
 
 
+@login_required
 @require_http_methods(["POST"])
 def test_saved_connection(request, connection_id):
     """Test an existing saved connection by its ID."""
@@ -110,6 +114,7 @@ def test_saved_connection(request, connection_id):
     )
 
 
+@login_required
 @require_http_methods(["POST"])
 def add_connection(request):
     """Validate, test, and save a new database connection."""
@@ -184,6 +189,7 @@ def add_connection(request):
     })
 
 
+@login_required
 @require_http_methods(["DELETE"])
 def delete_connection(request, connection_id):
     """Delete a database connection by ID."""
