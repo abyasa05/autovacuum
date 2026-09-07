@@ -1,4 +1,4 @@
-# AutoVacuum — PostgreSQL Database Cleaner
+# Vacuumanager — PostgreSQL Database Cleaner
 
 A comprehensive Django-based dashboard for managing & maintaining PostgreSQL databases. It allows you to securely save database connections, analyze table bloat, and perform `VACUUM ANALYZE` operations across multiple tables with ease.
 
