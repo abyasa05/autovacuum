@@ -184,10 +184,12 @@ def run_vacuum(request, connection_id):
 
         # Log to VacuumHistory
         is_success = 'success'
-        detail = None
+        detail_dict = {'vacuumed': vacuumed}
         if skipped or errors:
             is_success = 'partial_success'
-            detail = json.dumps({'skipped': skipped, 'errors': errors})
+            detail_dict['skipped'] = skipped
+            detail_dict['errors'] = errors
+        detail = json.dumps(detail_dict)
 
         VacuumHistory.objects.create(
             connection=db_conn,

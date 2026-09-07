@@ -43,7 +43,7 @@
                             </td>
                             <td>{{ history.vacuum_date|date:"M d, Y H:i" }}</td>
                             <td class="col-center">
-                                {% if history.is_success != 'success' %}
+                                {% if history.detail %}
                                 <button type="button" class="btn-icon open-detail-btn"
                                     data-detail="{{ history.detail|escape }}">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
