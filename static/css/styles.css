@@ -1101,12 +1101,6 @@ body {
     color: var(--primary);
 }
 
-/* JSON Formatting */
-.detail-modal {
-    max-width: 600px;
-    width: 90%;
-}
-
 .json-display {
     background: #f6f8fa;
     padding: 16px;
