@@ -20,12 +20,7 @@ A comprehensive Django-based dashboard for managing & maintaining PostgreSQL dat
 | Connector| psycopg2-binary        |
 | Frontend | HTML / CSS / JavaScript |
 
-## Prerequisites
-
-- Python 3.10+
-- pip
-
-## Quick Start
+## Quick Start (Docker)
 
 ### 1. Clone repository
 
@@ -40,6 +35,68 @@ docker compose up --build -d
 ```
 
 ### 3. Open your browser
+
+Navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+## Start Django Server Manually
+
+### Prerequisites
+
+- Python 3.10+
+- pip
+
+### 1. Clone repository
+
+```bash
+git clone https://github.com/abyasa05/autovacuum.git
+cd autovacuum
+```
+
+### 2. Create and activate a virtual environment
+
+**Windows:**
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+**macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Database (Optional)
+
+By default, the application expects a PostgreSQL database via environment variables. To connect with a local PostgreSQL instance, set the following environment variables, or update the `DATABASES` configuration directly in `config/settings.py`:
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
+
+### 5. Apply migrations
+
+```bash
+python manage.py migrate
+```
+
+### 6. Create a superuser (for login)
+
+```bash
+python manage.py createsuperuser
+```
+
+### 7. Run the development server
+
+```bash
+python manage.py runserver
+```
 
 Navigate to [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
