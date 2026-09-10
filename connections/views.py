@@ -6,39 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from .models import DatabaseConnection
-
-
-def _test_pg_connection(host, port, dbname, user, password):
-    """Utility function to test a PostgreSQL connection and return a JsonResponse."""
-    try:
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            dbname=dbname,
-            user=user,
-            password=password,
-            connect_timeout=5,
-        )
-        # Fetch server version as proof of connection
-        cursor = conn.cursor()
-        cursor.execute('SELECT version();')
-        version = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
-        return JsonResponse({
-            'success': True,
-            'message': f'Connection successful! Server: {version}'
-        })
-    except psycopg2.OperationalError as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Connection failed: {str(e).strip()}'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Unexpected error: {str(e).strip()}'
-        })
+from .utils import _connect_database, _test_pg_connection
 
 
 @login_required
@@ -143,14 +111,7 @@ def add_connection(request):
 
     # Test the connection before saving
     try:
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            dbname=dbname,
-            user=username,
-            password=password,
-            connect_timeout=5,
-        )
+        conn = _connect_database(host, port, dbname, username, password)
         conn.close()
     except psycopg2.OperationalError as e:
         return JsonResponse({

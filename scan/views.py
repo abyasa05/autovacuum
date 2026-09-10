@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from connections.models import DatabaseConnection
+from connections.utils import _connect_database
 from history.models import VacuumHistory
 
 
@@ -34,13 +35,12 @@ def check_bloat(request, connection_id):
             pass
 
     try:
-        conn = psycopg2.connect(
-            host=db_conn.host,
-            port=db_conn.port,
-            dbname=db_conn.dbname,
-            user=db_conn.username,
-            password=db_conn.password,
-            connect_timeout=5,
+        conn = _connect_database(
+            db_conn.host,
+            db_conn.port,
+            db_conn.dbname,
+            db_conn.username,
+            db_conn.password,
         )
         cursor = conn.cursor()
 
@@ -130,13 +130,12 @@ def run_vacuum(request, connection_id):
         }, status=400)
 
     try:
-        conn = psycopg2.connect(
-            host=db_conn.host,
-            port=db_conn.port,
-            dbname=db_conn.dbname,
-            user=db_conn.username,
-            password=db_conn.password,
-            connect_timeout=5,
+        conn = _connect_database(
+            db_conn.host,
+            db_conn.port,
+            db_conn.dbname,
+            db_conn.username,
+            db_conn.password,
         )
         # VACUUM cannot run inside a transaction block
         conn.autocommit = True
