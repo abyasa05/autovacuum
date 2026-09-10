@@ -128,6 +128,14 @@
                         <label class="form-label" for="connPassword">Password</label>
                         <input class="form-input" type="password" id="connPassword" placeholder="Enter password">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="connSslMode">SSL Mode</label>
+                        <select class="form-input" id="connSslMode" required>
+                            <option value="prefer" selected>Preferred</option>
+                            <option value="require">Required</option>
+                            <option value="disable">Disabled</option>
+                        </select>
+                    </div>
 
                     <button type="button" class="btn btn-test" id="btnTestConnection" onclick="testConnection()">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -245,6 +253,13 @@
         let minTableSizeKB = localStorage.getItem('minTableSizeKB') ? parseInt(localStorage.getItem('minTableSizeKB')) : null;
         let currentBloatConnectionId = null;
 
+        // Mirrors Python's SSL_MODE_CHOICES
+        const SSL_MODE_LABELS = { 
+            require: 'Required', 
+            prefer: 'Preferred', 
+            disable: 'Disabled' 
+        };
+
         // Update threshold badge on load
         document.getElementById('thresholdBadge').textContent = deadTupleThreshold.toLocaleString();
         updateMinSizeBadge();
@@ -321,6 +336,10 @@
                 </div>
                 <div class="card-meta">
                     <div class="card-meta-row">
+                        <span class="card-meta-label">SSL Mode</span>
+                        <span class="card-meta-value">${SSL_MODE_LABELS[conn.ssl_mode] ?? conn.ssl_mode}</span>
+                    </div>
+                    <div class="card-meta-row">
                         <span class="card-meta-label">Added</span>
                         <span class="card-meta-value">${escapeHtml(conn.created_at)}</span>
                     </div>
@@ -376,6 +395,7 @@
                 dbname: document.getElementById('connDbname').value.trim(),
                 username: document.getElementById('connUsername').value.trim(),
                 password: document.getElementById('connPassword').value,
+                ssl_mode: document.getElementById('connSslMode').value,
             };
         }
 

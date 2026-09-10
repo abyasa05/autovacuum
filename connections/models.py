@@ -38,6 +38,13 @@ class EncryptedCharField(models.CharField):
             return get_fernet().encrypt(value.encode('utf-8')).decode('utf-8')
 
 
+SSL_MODE_CHOICES = [
+    ('require', 'Required'),
+    ('prefer', 'Preferred'),
+    ('disable', 'Disabled'),
+]
+
+
 class DatabaseConnection(models.Model):
     """Stores PostgreSQL database connection credentials."""
 
@@ -66,6 +73,12 @@ class DatabaseConnection(models.Model):
         max_length=255,
         blank=True,
         help_text='Database password (stored encrypted)'
+    )
+    ssl_mode = models.CharField(
+        max_length=10,
+        choices=SSL_MODE_CHOICES,
+        default='prefer',
+        help_text='SSL connection mode'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     last_vacuum = models.DateTimeField(
