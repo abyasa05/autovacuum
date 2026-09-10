@@ -2,7 +2,7 @@ import psycopg2
 from django.http import JsonResponse
 
 
-def _connect_database(host, port, dbname, user, password):
+def _connect_database(host, port, dbname, user, password, ssl_mode='prefer'):
     """Create and return a psycopg2 connection to a PostgreSQL database."""
     return psycopg2.connect(
         host=host,
@@ -11,14 +11,14 @@ def _connect_database(host, port, dbname, user, password):
         user=user,
         password=password,
         connect_timeout=5,
-        sslmode='require'
+        sslmode=ssl_mode
     )
 
 
-def _test_pg_connection(host, port, dbname, user, password):
+def _test_pg_connection(host, port, dbname, user, password, ssl_mode='prefer'):
     """Utility function to test a PostgreSQL connection and return a JsonResponse."""
     try:
-        conn = _connect_database(host, port, dbname, user, password)
+        conn = _connect_database(host, port, dbname, user, password, ssl_mode)
         # Fetch server version as proof of connection
         cursor = conn.cursor()
         cursor.execute('SELECT version();')
