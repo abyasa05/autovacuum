@@ -176,6 +176,18 @@ body {
     color: var(--danger);
 }
 
+.btn-edit {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.btn-edit:hover {
+    background: var(--success-light);
+    color: var(--success);
+}
+
 .btn-test {
     background: var(--bg-secondary);
     color: var(--text-secondary);

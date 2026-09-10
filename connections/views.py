@@ -26,6 +26,7 @@ def dashboard_view(request):
             'username': conn.username,
             'ssl_mode': conn.ssl_mode,
             'created_at': conn.created_at.strftime('%b %d, %Y %H:%M'),
+            'updated_at': conn.updated_at.strftime('%b %d, %Y %H:%M'),
             'last_vacuum': conn.last_vacuum.strftime('%b %d, %Y %H:%M') if conn.last_vacuum else None,
         }
         for conn in connections
@@ -159,7 +160,85 @@ def add_connection(request):
             'username': db_conn.username,
             'ssl_mode': db_conn.ssl_mode,
             'created_at': db_conn.created_at.strftime('%b %d, %Y %H:%M'),
+            'updated_at': db_conn.updated_at.strftime('%b %d, %Y %H:%M'),
             'last_vacuum': None,
+        }
+    })
+
+
+@login_required
+@require_http_methods(["PATCH"])
+def update_connection(request, connection_id):
+    """Update an existing database connection's credentials."""
+    try:
+        db_conn = DatabaseConnection.objects.get(id=connection_id)
+    except DatabaseConnection.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Connection not found.'}, status=404)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON payload.'}, status=400)
+
+    host = data.get('host', db_conn.host).strip()
+    port = data.get('port', db_conn.port)
+    dbname = data.get('dbname', db_conn.dbname).strip()
+    username = data.get('username', db_conn.username).strip()
+    password = data.get('password', db_conn.password)
+    ssl_mode = data.get('ssl_mode', db_conn.ssl_mode)
+
+    if not all([host, dbname, username]):
+        return JsonResponse({
+            'success': False,
+            'message': 'Host, database name, and username are required.'
+        }, status=400)
+
+    if ssl_mode not in VALID_SSL_MODES:
+        return JsonResponse({'success': False, 'message': 'Invalid SSL mode.'}, status=400)
+
+    try:
+        port = int(port)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'Port must be a number.'}, status=400)
+
+    # Test the updated credentials before saving
+    try:
+        conn = _connect_database(host, port, dbname, username, password, ssl_mode)
+        conn.close()
+    except psycopg2.OperationalError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Connection test failed — not saved. Error: {str(e).strip()}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Unexpected error during connection test: {str(e).strip()}'
+        })
+
+    # Apply changes — updated_at is set automatically by auto_now
+    db_conn.host = host
+    db_conn.port = port
+    db_conn.dbname = dbname
+    db_conn.username = username
+    db_conn.password = password
+    db_conn.ssl_mode = ssl_mode
+    db_conn.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Connection updated successfully!',
+        'connection': {
+            'id': db_conn.id,
+            'name': db_conn.name,
+            'host': db_conn.host,
+            'port': db_conn.port,
+            'dbname': db_conn.dbname,
+            'username': db_conn.username,
+            'ssl_mode': db_conn.ssl_mode,
+            'created_at': db_conn.created_at.strftime('%b %d, %Y %H:%M'),
+            'updated_at': db_conn.updated_at.strftime('%b %d, %Y %H:%M'),
+            'last_vacuum': db_conn.last_vacuum.strftime('%b %d, %Y %H:%M') if db_conn.last_vacuum else None,
         }
     })
 

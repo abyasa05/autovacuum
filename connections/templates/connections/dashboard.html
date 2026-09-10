@@ -96,7 +96,7 @@
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <div class="modal-header">
-                <h2>New Connection</h2>
+                <h2 id="modalTitle">New Connection</h2>
                 <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
@@ -291,12 +291,20 @@
             <div class="connection-card" id="card-${conn.id}">
                 <div class="card-header">
                     <span class="card-title">${escapeHtml(conn.name)}</span>
-                    <button class="btn btn-danger" onclick="promptDelete(${conn.id}, '${escapeHtml(conn.name)}')" title="Delete connection">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                    </button>
+                    <div style="display:flex;align-items:center;gap:2px;">
+                        <button class="btn btn-edit" onclick="openEditModal(${conn.id})" title="Edit connection">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-danger" onclick="promptDelete(${conn.id}, '${escapeHtml(conn.name)}')" title="Delete connection">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-details">
                     <div class="card-detail">
@@ -343,6 +351,11 @@
                         <span class="card-meta-label">Added</span>
                         <span class="card-meta-value">${escapeHtml(conn.created_at)}</span>
                     </div>
+                    ${conn.updated_at !== conn.created_at ? `
+                    <div class="card-meta-row">
+                        <span class="card-meta-label">Updated</span>
+                        <span class="card-meta-value">${escapeHtml(conn.updated_at)}</span>
+                    </div>` : ''}
                     <div class="card-meta-row">
                         <span class="card-meta-label">Last Vacuum</span>
                         <span class="card-meta-value" id="lastVacuum-${conn.id}">${conn.last_vacuum ? escapeHtml(conn.last_vacuum) : '—'}</span>
@@ -374,16 +387,45 @@
         }
 
         // ===== MODAL =====
+        let editingConnectionId = null;
+
         function openModal() {
-            document.getElementById('modalOverlay').classList.add('active');
+            editingConnectionId = null;
+            document.getElementById('modalTitle').textContent = 'New Connection';
             document.getElementById('connectionForm').reset();
             document.getElementById('connPort').value = '5432';
+            document.getElementById('connName').disabled = false;
+            document.getElementById('connName').classList.remove('input-disabled');
             hideAlert();
+            document.getElementById('modalOverlay').classList.add('active');
             document.getElementById('connName').focus();
+        }
+
+        function openEditModal(id) {
+            const conn = connections.find(c => c.id === id);
+            if (!conn) return;
+            editingConnectionId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Connection';
+            document.getElementById('connName').value = conn.name;
+            document.getElementById('connName').disabled = true;
+            document.getElementById('connName').classList.add('input-disabled');
+            document.getElementById('connHost').value = conn.host;
+            document.getElementById('connPort').value = conn.port;
+            document.getElementById('connDbname').value = conn.dbname;
+            document.getElementById('connUsername').value = conn.username;
+            document.getElementById('connPassword').value = '';
+            document.getElementById('connSslMode').value = conn.ssl_mode;
+            hideAlert();
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('connHost').focus();
         }
 
         function closeModal() {
             document.getElementById('modalOverlay').classList.remove('active');
+            document.querySelector('.modal').scrollTop = 0;
+            editingConnectionId = null;
+            document.getElementById('connName').disabled = true;
+            document.getElementById('connName').classList.add('input-disabled');
         }
 
         // ===== FORM DATA =====
@@ -468,7 +510,13 @@
         // ===== SAVE CONNECTION =====
         async function saveConnection() {
             const data = getFormData();
-            if (!data.name || !data.host || !data.dbname || !data.username) {
+            const isEditing = editingConnectionId !== null;
+
+            if (!isEditing && !data.name) {
+                showAlert('error', 'Please fill in all required fields (name, host, database, username).');
+                return;
+            }
+            if (!data.host || !data.dbname || !data.username) {
                 showAlert('error', 'Please fill in all required fields (name, host, database, username).');
                 return;
             }
@@ -479,8 +527,13 @@
             hideAlert();
 
             try {
-                const res = await fetch('/api/connections/', {
-                    method: 'POST',
+                const url = isEditing
+                    ? `/api/connections/${editingConnectionId}/update/`
+                    : '/api/connections/';
+                const method = isEditing ? 'PATCH' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken,
@@ -490,7 +543,12 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    connections.unshift(result.connection);
+                    if (isEditing) {
+                        const idx = connections.findIndex(c => c.id === editingConnectionId);
+                        if (idx !== -1) connections[idx] = result.connection;
+                    } else {
+                        connections.unshift(result.connection);
+                    }
                     renderConnections();
                     closeModal();
                     showToast('success', result.message);

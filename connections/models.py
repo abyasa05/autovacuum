@@ -81,6 +81,11 @@ class DatabaseConnection(models.Model):
         help_text='SSL connection mode'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Last Updated',
+        help_text='Timestamp of the last update to this connection'
+    )
     last_vacuum = models.DateTimeField(
         null=True,
         blank=True,
